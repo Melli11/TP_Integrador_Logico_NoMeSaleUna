@@ -32,7 +32,7 @@ profesion(elisaBachofen,ingeniera_mecanica). %trabajan en un lugar
 
 esBuenoEn(bakunin,conductor).
 esBuenoEn(ravachol,tiro_al_blanco).
-esBuenoEn(rosaDubovsky,constructor_de_puentes).
+esBuenoEn(rosaDubovsky,construir_puentes).
 esBuenoEn(rosaDubovsky,mirar_Peppa_Pig).
 esBuenoEn(emmaGoldman,Habilidad):-
     esBuenoEn(judithButler,Habilidad).
@@ -42,7 +42,8 @@ esBuenoEn(emmaGoldman,Habilidad):-
 
 esBuenoEn(judithButler,judo).
 esBuenoEn(elisaBachofen,armar_bombas).
-
+esBuenoEn(juanSuriano,Habilidad):-
+    leGusta(juanSuriano,Habilidad).
 %Hobbies
 
 leGusta(ravachol,juegos_de_azar). 
@@ -74,15 +75,45 @@ historialCriminal(judithButler,fraude).
 
 
 % Punto 2: Viviendas
-% vivienda("Nombre","Caracteristicas","Ocupantes").
 
-% vivienda(casa_de_papel,pasadizo_1).
-% vivienda(casa_de_papel,pasadizo_2).
-% vivienda(casa_de_papel,cuartoSecreto_1,(medida(5,3))).
-% vivienda(casa_de_papel,cuartoSecreto_2,(medida(4,7))).
-% vivienda(casa_de_papel,tunelSecreto_1,(longitud(9,estado(terminado)))).
-% vivienda(casa_de_papel,tunelSecreto_2,(longitud(2,estado(terminado)))).
+%vivienda: Representa el conjunto de las viviendas
+vivienda(la_severino).
+vivienda(comisaria_48).
+vivienda(casa_de_papel).
+vivienda(casa_de_sol_naciente).
 
+
+% viveEn("NombreDeLaVivienda","Ocupantes"): viveEn relaciona las viviendas con sus ocupantes
+viveEn(la_severino,bakunin).
+viveEn(la_severino,elisaBachofen).
+viveEn(la_severino,rosaDubovsky).
+viveEn(comisaria_48,ravachol).
+viveEn(casa_de_papel,emmaGoldman).
+viveEn(casa_de_papel,juanSuriano).
+viveEn(casa_de_papel,judithButler).
+
+
+% pasadizo("NombreDeVivienda","Cantidad")
+pasadizo(la_severino,1).
+pasadizo(casa_de_papel,2).
+pasadizo(casa_de_sol_naciente,1).
+
+% cuartoSecreto("NombreDeVivienda",Largo,Ancho)
+cuartoSecreto(la_severino,4,8).
+cuartoSecreto(casa_de_papel,5,3).
+cuartoSecreto(casa_de_papel,4,7).
+
+
+% tunelSecreto("NombreDeVivienda",Longitud,EstadoDeConstruccion).
+tunelSecreto(la_severino,8,finalizado).
+tunelSecreto(la_severino,5,finalizado).
+tunelSecreto(la_severino,1,en_construccion).
+tunelSecreto(casa_de_papel,9,finalizado).
+tunelSecreto(casa_de_papel,2,finalizado).
+tunelSecreto(casa_de_sol_naciente,3,sin_construir).
+
+
+%Punto 3: 
 
 
 % Punto 5: Rebelde
@@ -92,19 +123,21 @@ historialCriminal(judithButler,fraude).
 % bombas, tirar al blanco o mirar Peppa Pig.
 
 esDisidente(UnaPersona):-
-    esPotencialTerrorista(UnaPersona),
-    esAntipatico(UnaPersona). %no tiene gustos registrados o le gusta todo en lo que es bueno.
-    % esPotencialCriminal(UnaPersona). %falta construir.
-
+    esPotencialTerrorista(UnaPersona), % poseen habilidades consideradas como terroristas
+    esAntipatico(UnaPersona), %no tiene gustos registrados o le gusta todo en lo que es bueno.
+    esPotencialCriminal(UnaPersona). %tienen más de un registro en su historial criminal o viven junto con alguien que sí lo tiene
 
 esPotencialTerrorista(UnaPersona):-
-    esBuenoEn(UnaPersona,bombas).
+    esBuenoEn(UnaPersona,armar_bombas).
 
 esPotencialTerrorista(UnaPersona):-
     esBuenoEn(UnaPersona,tiro_al_blanco).
 
 esPotencialTerrorista(UnaPersona):-
     esBuenoEn(UnaPersona,mirar_Peppa_Pig).
+ 
+
+% 2. No tener gustos registrados en el sistema o que le guste todo en lo que es bueno.
 
 esAntipatico(UnaPersona):-
     noTieneGustosRegistrados(UnaPersona).
@@ -118,13 +151,24 @@ noTieneGustosRegistrados(UnaPersona):-
 
 leGustaTodoEnLoQueEsBueno(UnaPersona):-
     persona(UnaPersona),
-    % hobbies(UnaPersona,Actividades),
-    forall(leGusta(_,Actividades), esBuenoEn(UnaPersona,Actividades)).
-    
+    forall(esBuenoEn(UnaPersona,Actividades),leGusta(UnaPersona,Actividades)).
 
-% 2.    No tener gustos registrados en el sistema o que le guste todo en lo que es bueno.
+% Tener más de un registro en su historial criminal o vivir junto con alguien que sí lo tenga3
+
+esPotencialCriminal(UnaPersona):-
+    tieneAntecedentes(UnaPersona).
+
+esPotencialCriminal(UnaPersona):-
+    viveConUnCriminal(UnaPersona).
 
 
+tieneAntecedentes(UnaPersona):-
+    historialCriminal(UnaPersona,_).
+
+viveConUnCriminal(UnaPersona):-
+    viveEn(Casa,UnaPersona),
+    viveEn(Casa,OtraPersona),
+    UnaPersona \= OtraPersona.
 
 :- begin_tests(tp).
 
@@ -135,5 +179,20 @@ test(las_habilidades_de_emma_goldman,nondet):-
 test(los_gustos_de_emma_goldman,nondet):-
     leGusta(emmaGoldman,automovilismo),
     leGusta(emmaGoldman,judo).
+
+test(son_potenciales_terroristas,nondet):-
+    esPotencialTerrorista(elisaBachofen),
+    esPotencialTerrorista(juanSuriano),
+    esPotencialTerrorista(emmaGoldman),
+    esPotencialTerrorista(ravachol),
+    esPotencialTerrorista(rosaDubovsky).
+    
+test(los_insipidos,nondet):-
+    esAntipatico(bakunin),
+    esAntipatico(juanSuriano),
+    esAntipatico(judithButler),
+    esAntipatico(ravachol),
+    esAntipatico(rosaDubovsky),
+    esAntipatico(sebastienFaure).
 
 :- end_tests(tp).
