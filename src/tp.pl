@@ -81,6 +81,7 @@ vivienda(la_severino).
 vivienda(comisaria_48).
 vivienda(casa_de_papel).
 vivienda(casa_de_sol_naciente).
+vivienda(casa_de_patricia).
 
 
 % viveEn("NombreDeLaVivienda","Ocupantes"): viveEn relaciona las viviendas con sus ocupantes
@@ -91,27 +92,31 @@ viveEn(comisaria_48,ravachol).
 viveEn(casa_de_papel,emmaGoldman).
 viveEn(casa_de_papel,juanSuriano).
 viveEn(casa_de_papel,judithButler).
+viveEn(casa_de_patricia,sebastienFaure).
 
-
-% pasadizo("NombreDeVivienda","Cantidad")
+% pasadizo(NombreDeVivienda,CantidadDePasadizos)
 pasadizo(la_severino,1).
 pasadizo(casa_de_papel,2).
 pasadizo(casa_de_sol_naciente,1).
 pasadizo(comisaria_48,0).
+pasadizo(casa_de_patricia,1).
 
-% cuartoSecreto("NombreDeVivienda",Largo,Ancho)
+% cuartoSecreto(NombreDeVivienda,Largo,Ancho)
 cuartoSecreto(la_severino,4,8).
 cuartoSecreto(casa_de_papel,5,3).
 cuartoSecreto(casa_de_papel,4,7).
 
 
-% tunelSecreto("NombreDeVivienda",Longitud,EstadoDeConstruccion).
+% tunelSecreto(NombreDeVivienda,Longitud,EstadoDeConstruccion).
 tunelSecreto(la_severino,8,finalizado).
 tunelSecreto(la_severino,5,finalizado).
 tunelSecreto(la_severino,1,en_construccion).
 tunelSecreto(casa_de_papel,9,finalizado).
 tunelSecreto(casa_de_papel,2,finalizado).
 tunelSecreto(casa_de_sol_naciente,3,sin_construir).
+
+% bunkers("NombreDeVivienda",perimetro,superficie_interna).
+bunkers(casa_de_patricia,2,10).
 
 
 %Punto 3: Guaridas rebeldes
@@ -123,13 +128,14 @@ viviendasConPotencialRebelde(Vivienda):-
 
 superficieDeVivienda(Vivienda,Area):-
     vivienda(Vivienda),
-    superficieCuartos(Vivienda,Metros_Cuartos),
-    longitudTuneles(Vivienda,Metros_Tuneles),
-    pasadizo(Vivienda,Cantidad),
-    Area is Metros_Cuartos + Metros_Tuneles + Cantidad.
+    superficieCuartos(Vivienda,Metros_Cuartos), %% predicado auxiliar para calcular m2 de los cuartos
+    longitudTuneles(Vivienda,Metros_Tuneles),%% predicado auxiliar para calcular m2 de los tuneles
+    pasadizo(Vivienda,Cantidad), %% uso directamente el predicado pasadizo
+    superficieBunkers(Vivienda,Metros_Bunker),
+    Area is Metros_Cuartos + Metros_Tuneles + Metros_Bunker + Cantidad.
 
 
-%Usar Findall
+%Predicados Auxiliares para hallar superficies 
 
 superficieCuartos(Vivienda,Metros):-
     vivienda(Vivienda),
@@ -146,6 +152,12 @@ longitudTuneles(Vivienda,Metros):-
     sum_list(Longitudes,Longitud_Total),
     Metros is Longitud_Total * 2 .
 
+superficieBunkers(Vivienda,Metros):-
+    vivienda(Vivienda),
+    bunkers(Vivienda,Superficie_Interna,Perimetro_Acceso),
+    Metros is Superficie_Interna + Perimetro_Acceso.
+
+
 % Punto 4: Aquí no hay quien viva
 
 % 4a)Detectar si en una vivienda no vive nadie.
@@ -156,8 +168,9 @@ estaDesocupada(Vivienda):-
 
 % 4b) Detectar si en una vivienda todos los que viven tienen al menos un gusto en común
 
-% tienenGustosEnComun(Vivienda):-
-    % forall(viveEn(Vivienda,Habitante),)
+tienenGustosEnComun(Vivienda):-
+    vivienda(Vivienda),
+    forall(viveEn(Vivienda,Habitante),compartenGustos(Habitante,OtroHabitante)).
 
 compartenGustos(Persona_1,Persona_2):-
     leGusta(Persona_1,Gusto),
@@ -169,7 +182,7 @@ compartenGustos(Persona_1,Persona_2):-
 % Punto 5: Rebelde
 % Una persona se considera posible disidente si cumple todos estos requisitos
 
-% 1.    Tener una habilidad en algo considerado terrorista. Se considera terrorista armar
+% 5.1    Tener una habilidad en algo considerado terrorista. Se considera terrorista armar
 % bombas, tirar al blanco o mirar Peppa Pig.
 
 esDisidente(UnaPersona):-
@@ -187,7 +200,7 @@ esPotencialTerrorista(UnaPersona):-
     esBuenoEn(UnaPersona,mirar_Peppa_Pig).
  
 
-% 2. No tener gustos registrados en el sistema o que le guste todo en lo que es bueno.
+% 5.2 No tener gustos registrados en el sistema o que le guste todo en lo que es bueno.
 
 esAntipatico(UnaPersona):-
     noTieneGustosRegistrados(UnaPersona).
@@ -203,7 +216,7 @@ leGustaTodoEnLoQueEsBueno(UnaPersona):-
     persona(UnaPersona),
     forall(esBuenoEn(UnaPersona,Actividades),leGusta(UnaPersona,Actividades)).
 
-% Tener más de un registro en su historial criminal o vivir junto con alguien que sí lo tenga.
+% 5.3 Tener más de un registro en su historial criminal o vivir junto con alguien que sí lo tenga.
 
 esPotencialCriminal(UnaPersona):-
     tieneAntecedentes(UnaPersona).
@@ -225,36 +238,42 @@ viveConUnCriminal(UnaPersona):-
 
 :- begin_tests(tp).
 
-test(las_habilidades_de_emma_goldman,nondet):-
+test(punto1_las_habilidades_de_emma_goldman,nondet):-
     esBuenoEn(emmaGoldman,armar_bombas),
     esBuenoEn(emmaGoldman,judo).
 
-test(los_gustos_de_emma_goldman,nondet):-
+test(punto1_los_gustos_de_emma_goldman,nondet):-
     leGusta(emmaGoldman,automovilismo),
     leGusta(emmaGoldman,judo).
 
-test(son_potenciales_terroristas,nondet):-
+test(punto3a_superficie_actividades_clandestina,nondet):-
+    superficieDeVivienda(la_severino,59),
+    superficieDeVivienda(comisaria_48,0).
+
+test(punto3b_tienen_Potencial_Rebelde,nondet):-
+    viviendasConPotencialRebelde(la_severino),
+    viviendasConPotencialRebelde(casa_de_papel).
+
+test(punto4a_aqui_no_hay_quien_viva):-
+    estaDesocupada(casa_de_sol_naciente).
+
+test(punto4b_casa_con_gustos_en_comun):-
+    tienenGustosEnComun(casa_de_papel),
+    tienenGustosEnComun(comisaria_48).
+
+test(punto5a_son_potenciales_terroristas,nondet):-
     esPotencialTerrorista(elisaBachofen),
     esPotencialTerrorista(juanSuriano),
     esPotencialTerrorista(emmaGoldman),
     esPotencialTerrorista(ravachol),
     esPotencialTerrorista(rosaDubovsky).
     
-test(los_insipidos,nondet):-
+test(punto5b_punto_los_insipidos,nondet):-
     esAntipatico(bakunin),
     esAntipatico(juanSuriano),
     esAntipatico(judithButler),
     esAntipatico(ravachol),
     esAntipatico(rosaDubovsky),
     esAntipatico(sebastienFaure).
-
-test(superficie_actividades_clandestina,nondet):-
-    superficieDeVivienda(la_severino,59),
-    superficieDeVivienda(comisaria_48,0).
-
-test(tienen_Potencial_Rebelde,nondet):-
-    viviendasConPotencialRebelde(la_severino),
-    viviendasConPotencialRebelde(casa_de_papel).
-
 
 :- end_tests(tp).
