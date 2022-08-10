@@ -113,7 +113,36 @@ tunelSecreto(casa_de_papel,2,finalizado).
 tunelSecreto(casa_de_sol_naciente,3,sin_construir).
 
 
-%Punto 3: 
+%Punto 3: Guaridas rebeldes
+viviendasConPotencialRebelde(Vivienda):-
+    viveEn(Vivienda,Persona_Disidente),
+    esDisidente(Persona_Disidente),
+    superficieDeVivienda(Vivienda,Area),
+    Area > 50.
+
+superficieDeVivienda(Vivienda,Area):-
+    vivienda(Vivienda),
+    superficieCuartos(Vivienda,Metros_Cuartos),
+    longitudTuneles(Vivienda,Metros_Tuneles),
+    pasadizo(Vivienda,Cantidad),
+    Area is Metros_Cuartos + Metros_Tuneles + Cantidad.
+
+
+% CON EL MODELADO ACTUAL PARA PODER SUMAR LAS AREAS TENGO QUE USAR UN FORALL
+% CAPAZ LO MEJOR ES MODELAR LOS AREAS DE LOS CUARTOS DE OTRA MANERA PARA EVITAR RECURRIR
+% AL FORALL
+
+superficieCuartos(Vivienda,Metros):-
+    vivienda(Vivienda),
+    cuartoSecreto(Vivienda,Largo,Ancho),
+    Metros is Largo * Ancho.
+
+longitudTuneles(Vivienda,Metros):-
+    vivienda(Vivienda),
+    % forall(tunelSecreto(Vivienda,Longitud,finalizado), tunelSecreto(_,Longitud,_)),
+    SumaDeMetros is Longitud * 2 .
+
+
 
 
 % Punto 5: Rebelde
@@ -153,7 +182,7 @@ leGustaTodoEnLoQueEsBueno(UnaPersona):-
     persona(UnaPersona),
     forall(esBuenoEn(UnaPersona,Actividades),leGusta(UnaPersona,Actividades)).
 
-% Tener más de un registro en su historial criminal o vivir junto con alguien que sí lo tenga3
+% Tener más de un registro en su historial criminal o vivir junto con alguien que sí lo tenga.
 
 esPotencialCriminal(UnaPersona):-
     tieneAntecedentes(UnaPersona).
@@ -169,6 +198,9 @@ viveConUnCriminal(UnaPersona):-
     viveEn(Casa,UnaPersona),
     viveEn(Casa,OtraPersona),
     UnaPersona \= OtraPersona.
+
+
+
 
 :- begin_tests(tp).
 
@@ -195,4 +227,7 @@ test(los_insipidos,nondet):-
     esAntipatico(rosaDubovsky),
     esAntipatico(sebastienFaure).
 
+test(superficie_actividades_clandestina,nondet):-
+    superficieDeVivienda(la_severino,50),
+    superficieDeVivienda(comisaria_48,0).
 :- end_tests(tp).
