@@ -97,6 +97,7 @@ viveEn(casa_de_papel,judithButler).
 pasadizo(la_severino,1).
 pasadizo(casa_de_papel,2).
 pasadizo(casa_de_sol_naciente,1).
+pasadizo(comisaria_48,0).
 
 % cuartoSecreto("NombreDeVivienda",Largo,Ancho)
 cuartoSecreto(la_severino,4,8).
@@ -128,20 +129,40 @@ superficieDeVivienda(Vivienda,Area):-
     Area is Metros_Cuartos + Metros_Tuneles + Cantidad.
 
 
-% CON EL MODELADO ACTUAL PARA PODER SUMAR LAS AREAS TENGO QUE USAR UN FORALL
-% CAPAZ LO MEJOR ES MODELAR LOS AREAS DE LOS CUARTOS DE OTRA MANERA PARA EVITAR RECURRIR
-% AL FORALL
+%Usar Findall
 
 superficieCuartos(Vivienda,Metros):-
     vivienda(Vivienda),
-    cuartoSecreto(Vivienda,Largo,Ancho),
-    Metros is Largo * Ancho.
+    findall(Largo,cuartoSecreto(Vivienda,Largo,Ancho),Largos),
+    findall(Ancho,cuartoSecreto(Vivienda,Largo,Ancho),Anchos),
+    sum_list(Largos,Largo_Total),
+    sum_list(Anchos, Ancho_Total),
+    Metros is Largo_Total * Ancho_Total.
+
 
 longitudTuneles(Vivienda,Metros):-
     vivienda(Vivienda),
-    % forall(tunelSecreto(Vivienda,Longitud,finalizado), tunelSecreto(_,Longitud,_)),
-    SumaDeMetros is Longitud * 2 .
+    findall(Longitud,tunelSecreto(Vivienda,Longitud,finalizado),Longitudes),
+    sum_list(Longitudes,Longitud_Total),
+    Metros is Longitud_Total * 2 .
 
+% Punto 4: Aquí no hay quien viva
+
+% 4a)Detectar si en una vivienda no vive nadie.
+
+estaDesocupada(Vivienda):-
+    vivienda(Vivienda),
+    not(viveEn(Vivienda,_)).
+
+% 4b) Detectar si en una vivienda todos los que viven tienen al menos un gusto en común
+
+% tienenGustosEnComun(Vivienda):-
+    % forall(viveEn(Vivienda,Habitante),)
+
+compartenGustos(Persona_1,Persona_2):-
+    leGusta(Persona_1,Gusto),
+    leGusta(Persona_2,Gusto),
+    Persona_1 \= Persona_2.
 
 
 
@@ -228,6 +249,12 @@ test(los_insipidos,nondet):-
     esAntipatico(sebastienFaure).
 
 test(superficie_actividades_clandestina,nondet):-
-    superficieDeVivienda(la_severino,50),
+    superficieDeVivienda(la_severino,59),
     superficieDeVivienda(comisaria_48,0).
+
+test(tienen_Potencial_Rebelde,nondet):-
+    viviendasConPotencialRebelde(la_severino),
+    viviendasConPotencialRebelde(casa_de_papel).
+
+
 :- end_tests(tp).
