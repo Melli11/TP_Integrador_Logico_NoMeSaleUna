@@ -128,11 +128,21 @@ viviendasConPotencialRebelde(Vivienda):-
 
 superficieDeVivienda(Vivienda,Area):-
     vivienda(Vivienda),
-    superficieCuartos(Vivienda,Metros_Cuartos), %% predicado auxiliar para calcular m2 de los cuartos
-    longitudTuneles(Vivienda,Metros_Tuneles),%% predicado auxiliar para calcular m2 de los tuneles
-    pasadizo(Vivienda,Cantidad), %% uso directamente el predicado pasadizo
-    superficieBunkers(Vivienda,Metros_Bunker),
-    Area is Metros_Cuartos + Metros_Tuneles + Metros_Bunker + Cantidad.
+    superficieCuartos(Vivienda,Total_Cuartos), %% predicado auxiliar para calcular m2 de los cuartos
+    superficieTuneles(Vivienda,Total_Tuneles),%% predicado auxiliar para calcular m2 de los tuneles
+    superficiePasadizo(Vivienda,Total_Pasadizo),
+    superficieBunkers(Vivienda,Total_Bunkers),
+
+    % findall(Metros_Cuartos,superficieCuartos(Vivienda,Metros_Cuartos),Cuartos), %% predicado auxiliar para calcular m2 de los cuartos
+    % findall(Metros_Tuneles,longitudTuneles(Vivienda,Metros_Tuneles),Tuneles),%% predicado auxiliar para calcular m2 de los tuneles 
+    % findall(Metros_Bunkers,superficieBunkers(Vivienda,Metros_Bunker),Bunkeres), %% predicado auxiliar para calcular m2 de los cuartos
+    
+    % sum_list(Cuartos,Total_Cuartos),
+    % sum_list(Tuneles,Total_Tuneles),
+    % sum_list(Bunkeres,Total_Bunkers),
+    % pasadizo(Vivienda,TotalPasadizo), %% uso directamente el predicado pasadizo
+
+    Area is Total_Cuartos + Total_Tuneles + Total_Pasadizo + Total_Bunkers .
 
 
 %Predicados Auxiliares para hallar superficies 
@@ -146,16 +156,21 @@ superficieCuartos(Vivienda,Metros):-
     Metros is Largo_Total * Ancho_Total.
 
 
-longitudTuneles(Vivienda,Metros):-
+superficieTuneles(Vivienda,Metros):-
     vivienda(Vivienda),
     findall(Longitud,tunelSecreto(Vivienda,Longitud,finalizado),Longitudes),
     sum_list(Longitudes,Longitud_Total),
     Metros is Longitud_Total * 2 .
 
+superficiePasadizo(Vivienda,Metros):- pasadizo(Vivienda,Metros).
+
 superficieBunkers(Vivienda,Metros):-
     vivienda(Vivienda),
-    bunkers(Vivienda,Superficie_Interna,Perimetro_Acceso),
-    Metros is Superficie_Interna + Perimetro_Acceso.
+    findall(Superficie_Interna,bunkers(Vivienda,Superficie_Interna,Perimetro_Acceso), Sup_Internas),
+    findall(Perimetro_Acceso,bunkers(Vivienda,Superficie_Interna,Perimetro_Acceso), Per_Accesos),
+    sum_list(Sup_Internas,Sup_Internas_Total),
+    sum_list(Per_Accesos,Per_Accesos_Total),
+    Metros is Sup_Internas_Total + Per_Accesos_Total.
 
 
 % Punto 4: Aquí no hay quien viva
