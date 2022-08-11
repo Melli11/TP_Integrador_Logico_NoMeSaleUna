@@ -18,6 +18,7 @@ persona(juanSuriano).
 persona(sebastienFaure).
 
 % Profesion
+% profesion(Persona,Profesion)
 profesion(bakunin,aviacion_militar).
 profesion(ravachol,inteligencia_militar).
 profesion(rosaDubovsky,recolector_de_basura).
@@ -29,7 +30,7 @@ profesion(judithButler,inteligencia_militar).
 profesion(elisaBachofen,ingeniera_mecanica). %trabajan en un lugar
 
 % Habilidades
-
+% esBuenoEn(Persona,Actividad)
 esBuenoEn(bakunin,conductor).
 esBuenoEn(ravachol,tiro_al_blanco).
 esBuenoEn(rosaDubovsky,construir_puentes).
@@ -44,8 +45,8 @@ esBuenoEn(judithButler,judo).
 esBuenoEn(elisaBachofen,armar_bombas).
 esBuenoEn(juanSuriano,Habilidad):-
     leGusta(juanSuriano,Habilidad).
-%Hobbies
 
+%Hobbies
 leGusta(ravachol,juegos_de_azar). 
 leGusta(ravachol,ajedrez). 
 leGusta(ravachol,tiro_al_blanco). 
@@ -132,17 +133,7 @@ superficieDeVivienda(Vivienda,Area):-
     superficieTuneles(Vivienda,Total_Tuneles),%% predicado auxiliar para calcular m2 de los tuneles
     superficiePasadizo(Vivienda,Total_Pasadizo),
     superficieBunkers(Vivienda,Total_Bunkers),
-
-    % findall(Metros_Cuartos,superficieCuartos(Vivienda,Metros_Cuartos),Cuartos), %% predicado auxiliar para calcular m2 de los cuartos
-    % findall(Metros_Tuneles,longitudTuneles(Vivienda,Metros_Tuneles),Tuneles),%% predicado auxiliar para calcular m2 de los tuneles 
-    % findall(Metros_Bunkers,superficieBunkers(Vivienda,Metros_Bunker),Bunkeres), %% predicado auxiliar para calcular m2 de los cuartos
-    
-    % sum_list(Cuartos,Total_Cuartos),
-    % sum_list(Tuneles,Total_Tuneles),
-    % sum_list(Bunkeres,Total_Bunkers),
-    % pasadizo(Vivienda,TotalPasadizo), %% uso directamente el predicado pasadizo
-
-    Area is Total_Cuartos + Total_Tuneles + Total_Pasadizo + Total_Bunkers .
+    Area is Total_Cuartos + Total_Tuneles + Total_Pasadizo + Total_Bunkers.
 
 
 %Predicados Auxiliares para hallar superficies 
@@ -248,7 +239,23 @@ viveConUnCriminal(UnaPersona):-
     viveEn(Casa,OtraPersona),
     UnaPersona \= OtraPersona.
 
+% Punto 7: Batallón de rebeldes
 
+% Restricciones
+
+% las personas tienen que tener más de un registro en su historial criminal o vivir junto con alguien que sí lo tenga
+
+% not(esPotencialCriminal(UnaPersona)).
+
+
+% tienen que sumar en total más de 3 habilidades (esto es, incluyendo todas las
+% habilidades de las personas que conformen el batallón).
+
+tieneMasDe3Habilidades(UnaPersona):-
+    persona(UnaPersona),
+    findall(Habilidad,esBuenoEn(UnaPersona,Habilidad),Habilidades),
+    sum_list(Habilidades,Total_Habilidades),
+    Total_Habilidades > 3.
 
 
 :- begin_tests(tp).
