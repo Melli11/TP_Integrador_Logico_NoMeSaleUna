@@ -73,6 +73,10 @@ historialCriminal(bakunin,fraude).
 historialCriminal(bakunin,tenencia_cafeina).
 historialCriminal(judithButler,falsificacion_cheques).
 historialCriminal(judithButler,fraude).
+historialCriminal(ravachol,falsificacion_de_vacunas).
+historialCriminal(ravachol,fraude).
+historialCriminal(juanSuriano,falsificacion_de_dinero).
+historialCriminal(juanSuriano,fraude).
 
 
 % Punto 2: Viviendas
@@ -175,13 +179,11 @@ estaDesocupada(Vivienda):-
 % 4b) Detectar si en una vivienda todos los que viven tienen al menos un gusto en común
 
 tienenGustosEnComun(Vivienda):-
-    vivienda(Vivienda),
-    forall(viveEn(Vivienda,Habitante),compartenGustos(Habitante,OtroHabitante)).
+    leGusta(_,Gusto),
+    forall(viveEn(Vivienda,Habitante),leGusta(Habitante,Gusto)).
 
-compartenGustos(Persona_1,Persona_2):-
-    leGusta(Persona_1,Gusto),
-    leGusta(Persona_2,Gusto),
-    Persona_1 \= Persona_2.
+%del conjunto de partida formado por los pares "vivienda-habitante" que representa todas las personas que viven en una vivienda,
+% donde la variable libre es Habitante y la condicion será principalmente el gusto.
 
 
 
@@ -241,11 +243,26 @@ viveConUnCriminal(UnaPersona):-
 
 % Punto 7: Batallón de rebeldes
 
+batallonDeRebeldes(Personas):-
+    persona(UnaPersona),
+    not(tieneMasDeUnAntecedente(UnaPersona)).
+
+batallonDeRebeldes(Personas):-
+    persona(UnaPersona),
+    not(viveConUnCriminal(UnaPersona)).
+
+
 % Restricciones
 
 % las personas tienen que tener más de un registro en su historial criminal o vivir junto con alguien que sí lo tenga
 
-% not(esPotencialCriminal(UnaPersona)).
+tieneMasDeUnAntecedente(UnaPersona):-
+    persona(UnaPersona),
+    findall(Antecedente,historialCriminal(UnaPersona,Antecedente),Listado_Antecendentes),
+    length(Listado_Antecendentes,Total_De_Entradas),
+    Total_De_Entradas > 1.
+
+
 
 
 % tienen que sumar en total más de 3 habilidades (esto es, incluyendo todas las
@@ -254,7 +271,7 @@ viveConUnCriminal(UnaPersona):-
 tieneMasDe3Habilidades(UnaPersona):-
     persona(UnaPersona),
     findall(Habilidad,esBuenoEn(UnaPersona,Habilidad),Habilidades),
-    sum_list(Habilidades,Total_Habilidades),
+    length(Habilidades,Total_Habilidades),
     Total_Habilidades > 3.
 
 
@@ -279,7 +296,7 @@ test(punto3b_tienen_Potencial_Rebelde,nondet):-
 test(punto4a_aqui_no_hay_quien_viva):-
     estaDesocupada(casa_de_sol_naciente).
 
-test(punto4b_casa_con_gustos_en_comun):-
+test(punto4b_casa_con_gustos_en_comun,nondet):-
     tienenGustosEnComun(casa_de_papel),
     tienenGustosEnComun(comisaria_48).
 
